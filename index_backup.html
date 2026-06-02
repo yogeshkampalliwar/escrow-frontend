@@ -108,9 +108,9 @@ async function createProject() {
   const el = document.getElementById("createStatus");
   try {
     el.textContent = "⏳ Transaction send ho rahi hai...";
-    const freelancer = document.getElementById("freelancerAddr").value;
-    const m1 = document.getElementById("milestone1").value;
-    const m2 = document.getElementById("milestone2").value;
+    const freelancer = (document.getElementById("freelancerAddr")?.value) || "";
+    const m1 = (document.getElementById("milestone1")?.value) || "";
+    const m2 = (document.getElementById("milestone2")?.value) || "";
     const amounts = [ethers.parseEther(m1)];
     if (m2) amounts.push(ethers.parseEther(m2));
     const total = amounts.reduce((a,b) => a+b, 0n);
@@ -127,8 +127,8 @@ async function submitWork() {
   const el = document.getElementById("submitStatus");
   try {
     el.textContent = "⏳ Submitting...";
-    const pid = document.getElementById("submitProjectId").value;
-    const proof = document.getElementById("proofLink").value;
+    const pid = (document.getElementById("submitProjectId")?.value) || "";
+    const proof = (document.getElementById("proofLink")?.value) || "";
     const contract = new ethers.Contract(CONTRACT, ABI, signer);
     const tx = await contract.submitWork(pid, proof);
     await tx.wait();
@@ -140,7 +140,7 @@ async function checkProject() {
   if (!provider) { alert("Wallet connect karo!"); return; }
   const el = document.getElementById("checkStatus");
   try {
-    const pid = document.getElementById("checkProjectId").value;
+    const pid = (document.getElementById("checkProjectId")?.value) || "";
     const contract = new ethers.Contract(CONTRACT, ABI, provider);
     const p = await contract.projects(pid);
     const statuses = ["Active","Completed","Disputed","Refunded"];

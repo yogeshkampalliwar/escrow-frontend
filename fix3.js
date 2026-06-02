@@ -10,7 +10,7 @@ html = html.replace(
 // Make sure projCat has proper value check
 html = html.replace(
   "if(!freelancer||!m1){",
-  "const cat = document.getElementById('projCat').value; if(!freelancer||!m1||!cat){"
+  "const cat = (document.getElementById('projCat')?.value) || ""; if(!freelancer||!m1||!cat){"
 );
 
 fs.writeFileSync('index.html', html);

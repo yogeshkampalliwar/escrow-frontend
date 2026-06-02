@@ -492,7 +492,7 @@ async function fetchEthPrice() {
 }
 
 function calcSwap() {
-  const amt = parseFloat(document.getElementById("swapFrom").value) || 0;
+  const amt = parseFloat((document.getElementById("swapFrom")?.value) || "") || 0;
   const swapFee = amt * 0.10;
   const platformFee = amt * 0.10;
   const youGet = amt - swapFee - platformFee;
@@ -500,15 +500,15 @@ function calcSwap() {
   document.getElementById("swapFee").textContent = swapFee.toFixed(6)+" ETH";
   document.getElementById("platformFee").textContent = platformFee.toFixed(6)+" ETH";
   document.getElementById("swapGet").textContent = youGet.toFixed(6)+" ETH ($"+usdVal+")";
-  document.getElementById("swapTo").value = usdVal;
-  document.getElementById("swapTokenLabel").textContent = document.getElementById("swapToken").value;
+  (document.getElementById("swapTo")?.value) || "" = usdVal;
+  document.getElementById("swapTokenLabel").textContent = (document.getElementById("swapToken")?.value) || "";
 }
 
 async function doSwap() {
   if(!signer){ alert("Please connect your wallet first!"); return; }
   const el = document.getElementById("swapStatus");
-  const amt = document.getElementById("swapFrom").value;
-  const token = document.getElementById("swapToken").value;
+  const amt = (document.getElementById("swapFrom")?.value) || "";
+  const token = (document.getElementById("swapToken")?.value) || "";
   if(!amt || parseFloat(amt) <= 0){ el.textContent="❌ Amount daalo!"; el.className="status error"; return; }
   try {
     el.textContent = "⏳ Swap Processing...";
@@ -555,11 +555,11 @@ async function createProject() {
   try {
     el.textContent = "⏳ ETH lock ho rahi hai...";
     el.className = "status";
-    const freelancer = document.getElementById("freelancerAddr").value.trim();
-    const m1 = document.getElementById("milestone1").value;
-    const m2 = document.getElementById("milestone2").value;
-    const m3 = document.getElementById("milestone3").value;
-    const cat = document.getElementById('projCat').value; if(!freelancer||!m1||!cat){ el.textContent="❌ Freelancer address aur milestone 1 zaroor daalo!"; el.className="status error"; return; }
+    const freelancer = (document.getElementById("freelancerAddr")?.value) || "".trim();
+    const m1 = (document.getElementById("milestone1")?.value) || "";
+    const m2 = (document.getElementById("milestone2")?.value) || "";
+    const m3 = (document.getElementById("milestone3")?.value) || "";
+    const cat = (document.getElementById('projCat')?.value) || ""; if(!freelancer||!m1||!cat){ el.textContent="❌ Freelancer address aur milestone 1 zaroor daalo!"; el.className="status error"; return; }
     const amounts = [ethers.parseEther(m1)];
     if(m2) amounts.push(ethers.parseEther(m2));
     if(m3) amounts.push(ethers.parseEther(m3));
@@ -588,8 +588,8 @@ async function submitWork() {
   try {
     el.textContent = "⏳ Submitting work...";
     el.className = "status";
-    const pid = document.getElementById("submitProjectId").value;
-    const proof = document.getElementById("proofLink").value;
+    const pid = (document.getElementById("submitProjectId")?.value) || "";
+    const proof = (document.getElementById("proofLink")?.value) || "";
     if(!pid||!proof){ el.textContent="❌ Enter Project ID and proof link!"; el.className="status error"; return; }
     const c = new ethers.Contract(CONTRACT, ABI, signer);
     const tx = await c.submitWork(pid, proof);
@@ -606,7 +606,7 @@ async function checkProject() {
   if(!provider){ alert("Please connect your wallet first!"); return; }
   const el = document.getElementById("checkStatus");
   try {
-    const pid = document.getElementById("checkProjectId").value;
+    const pid = (document.getElementById("checkProjectId")?.value) || "";
     if(!pid){ el.textContent="❌ Enter Project ID!"; el.className="status error"; return; }
     const c = new ethers.Contract(CONTRACT, ABI, provider);
     const p = await c.projects(pid);
@@ -621,12 +621,12 @@ async function checkProject() {
 
 function postGig() {
   if(!userAddress){ alert("Please connect your wallet first!"); return; }
-  const title = document.getElementById("gigTitle").value.trim();
-  const desc = document.getElementById("gigDesc").value.trim();
-  const cat = document.getElementById("gigCat").value;
-  const price = document.getElementById("gigPrice").value;
-  const delivery = document.getElementById("gigDelivery").value.trim();
-  const contact = document.getElementById("gigContact").value.trim();
+  const title = (document.getElementById("gigTitle")?.value) || "".trim();
+  const desc = (document.getElementById("gigDesc")?.value) || "".trim();
+  const cat = (document.getElementById("gigCat")?.value) || "";
+  const price = (document.getElementById("gigPrice")?.value) || "";
+  const delivery = (document.getElementById("gigDelivery")?.value) || "".trim();
+  const contact = (document.getElementById("gigContact")?.value) || "".trim();
   const el = document.getElementById("postStatus");
   if(!title||!desc||!cat||!price){ el.textContent="❌ Please fill all required fields!"; el.className="status error"; return; }
   const gig = { id:Date.now(), title, desc, cat, price, delivery, contact, seller:userAddress, sellerShort:userAddress.slice(0,6)+"..."+userAddress.slice(-4), createdAt:new Date().toLocaleDateString() };
@@ -634,9 +634,9 @@ function postGig() {
   localStorage.setItem("aiescrow_gigs", JSON.stringify(gigs));
   el.textContent = "✅ Gig posted!";
   el.className = "status success";
-  document.getElementById("gigTitle").value="";
-  document.getElementById("gigDesc").value="";
-  document.getElementById("gigPrice").value="";
+  (document.getElementById("gigTitle")?.value) || ""="";
+  (document.getElementById("gigDesc")?.value) || ""="";
+  (document.getElementById("gigPrice")?.value) || ""="";
   renderGigs();
 }
 
@@ -700,13 +700,13 @@ function filterJob(cat, el) {
 function saveProfile() {
   if(!userAddress){ alert("Please connect your wallet first!"); return; }
   const profile = {
-    name: document.getElementById("pName").value,
-    title: document.getElementById("pTitle").value,
-    bio: document.getElementById("pBio").value,
-    skills: document.getElementById("pSkills").value,
-    rate: document.getElementById("pRate").value,
-    contact: document.getElementById("pContact").value,
-    category: document.getElementById("pCategory").value,
+    name: (document.getElementById("pName")?.value) || "",
+    title: (document.getElementById("pTitle")?.value) || "",
+    bio: (document.getElementById("pBio")?.value) || "",
+    skills: (document.getElementById("pSkills")?.value) || "",
+    rate: (document.getElementById("pRate")?.value) || "",
+    contact: (document.getElementById("pContact")?.value) || "",
+    category: (document.getElementById("pCategory")?.value) || "",
     wallet: userAddress
   };
   localStorage.setItem("aiescrow_profile", JSON.stringify(profile));
@@ -728,12 +728,12 @@ function loadProfile() {
   if(p.skills){
     document.getElementById("profileSkillsView").innerHTML = p.skills.split(",").map(s=>`<span class="skill-tag">${s.trim()}</span>`).join("");
   }
-  if(p.name) document.getElementById("pName").value = p.name;
-  if(p.title) document.getElementById("pTitle").value = p.title;
-  if(p.bio) document.getElementById("pBio").value = p.bio;
-  if(p.skills) document.getElementById("pSkills").value = p.skills;
-  if(p.rate) document.getElementById("pRate").value = p.rate;
-  if(p.contact) document.getElementById("pContact").value = p.contact;
+  if(p.name) (document.getElementById("pName")?.value) || "" = p.name;
+  if(p.title) (document.getElementById("pTitle")?.value) || "" = p.title;
+  if(p.bio) (document.getElementById("pBio")?.value) || "" = p.bio;
+  if(p.skills) (document.getElementById("pSkills")?.value) || "" = p.skills;
+  if(p.rate) (document.getElementById("pRate")?.value) || "" = p.rate;
+  if(p.contact) (document.getElementById("pContact")?.value) || "" = p.contact;
 }
 
 function loadHistory() {

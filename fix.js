@@ -2,8 +2,8 @@ const fs = require('fs');
 let html = fs.readFileSync('index.html', 'utf8');
 
 // Fix JS error - remove milestone2/3 references
-html = html.replace("const m2 = document.getElementById(\"milestone2\").value;", "const m2 = null;");
-html = html.replace("const m3 = document.getElementById(\"milestone3\").value;", "const m3 = null;");
+html = html.replace("const m2 = (document.getElementById(\"milestone2\")?.value) || "";", "const m2 = null;");
+html = html.replace("const m3 = (document.getElementById(\"milestone3\")?.value) || "";", "const m3 = null;");
 
 // Fix all Hindi
 const fixes = [
