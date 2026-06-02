@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Freelance Platform</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0a0a; color:#fff; font-family:'Segoe UI',sans-serif; }
+.navbar { background:#111; padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222; }
+.logo { color:#00ff88; font-size:1.5rem; font-weight:bold; }
+.btn { background:#00ff88; color:#000; padding:0.5rem 1.5rem; border:none; border-radius:8px; cursor:pointer; font-weight:bold; }
+.btn:hover { background:#00cc66; }
+.btn-outline { background:transparent; color:#00ff88; border:1px solid #00ff88; padding:0.5rem 1.5rem; border-radius:8px; cursor:pointer; }
+.container { max-width:1100px; margin:0 auto; padding:2rem; }
+.hero { text-align:center; padding:4rem 0; }
+.hero h1 { font-size:3rem; margin-bottom:1rem; }
+.hero h1 span { color:#00ff88; }
+.hero p { color:#888; font-size:1.2rem; margin-bottom:2rem; }
+.cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1.5rem; margin-top:3rem; }
+.card { background:#111; border:1px solid #222; border-radius:12px; padding:1.5rem; }
+.card h3 { color:#00ff88; margin-bottom:1rem; }
+.input { width:100%; background:#1a1a1a; border:1px solid #333; color:#fff; padding:0.7rem 1rem; border-radius:8px; margin-bottom:0.8rem; font-size:0.95rem; }
+.status { background:#1a1a1a; border-radius:8px; padding:1rem; margin-top:1rem; font-size:0.9rem; color:#888; min-height:60px; }
+.tag { background:#00ff8820; color:#00ff88; padding:0.2rem 0.8rem; border-radius:20px; font-size:0.8rem; }
+.wallet-info { background:#111; border:1px solid #222; border-radius:8px; padding:0.5rem 1rem; font-size:0.85rem; color:#00ff88; }
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">⚡ AIEscrow</div>
+  <div style="display:flex;gap:1rem;align-items:center">
+    <div class="wallet-info" id="walletInfo">Not Connected</div>
+    <button class="btn" onclick="connectWallet()">Connect Wallet</button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="hero">
+    <div class="tag">Powered by Claude AI + Arbitrum</div>
+    <h1 style="margin-top:1rem">Freelance Platform <span>on Chain</span></h1>
+    <p>AI-powered escrow — automatic payment release</p>
+  </div>
+
+  <div class="cards">
+    <!-- Create Project -->
+    <div class="card">
+      <h3>🚀 Create Project</h3>
+      <input class="input" id="freelancerAddr" placeholder="Freelancer Address (0x...)">
+      <input class="input" id="milestone1" placeholder="Milestone 1 Amount (ETH)" type="number" step="0.001">
+      <input class="input" id="milestone2" placeholder="Milestone 2 Amount (ETH) - optional" type="number" step="0.001">
+      <button class="btn" style="width:100%" onclick="createProject()">Create & Lock ETH</button>
+      <div class="status" id="createStatus">Wallet connect karo pehle...</div>
+    </div>
+
+    <!-- Submit Work -->
+    <div class="card">
+      <h3>📤 Submit Work</h3>
+      <input class="input" id="submitProjectId" placeholder="Project ID">
+      <input class="input" id="proofLink" placeholder="Work Proof Link (GitHub/Drive)">
+      <button class="btn" style="width:100%" onclick="submitWork()">Submit Milestone</button>
+      <div class="status" id="submitStatus">Project ID aur proof link daalo...</div>
+    </div>
+
+    <!-- Check Project -->
+    <div class="card">
+      <h3>🔍 Check Project</h3>
+      <input class="input" id="checkProjectId" placeholder="Project ID">
+      <button class="btn" style="width:100%" onclick="checkProject()">Get Details</button>
+      <div class="status" id="checkStatus">Project ID daalo...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CONTRACT = "0x65Aa7cd0Bb5011D385985271507baeFCcE354ce5";
+const ABI = [
+  "function createProjectETH(address _freelancer, uint256 _totalMilestones, uint256[] calldata _milestoneAmounts) external payable returns (uint256)",
+  "function submitWork(uint256 _projectId, string calldata _proofLink) external",
+  "function projects(uint256) external view returns (address,address,address,uint256,uint256,uint256,uint256,bool,bool,uint256,uint256,uint8)",
+  "function projectCount() external view returns (uint256)"
+];
+
+let provider, signer;
+
+async function connectWallet() {
+  if (!window.ethereum) { alert("MetaMask install karo!"); return; }
+  try {
+    provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    await window.ethereum.request({
+      method: "wallet_addEthereumChain",
+      params: [{ chainId: "0x66eee", chainName: "Arbitrum Sepolia",
+        rpcUrls: ["https://sepolia-rollup.arbitrum.io/rpc"],
+        nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+        blockExplorerUrls: ["https://sepolia.arbiscan.io"] }]
+    });
+    signer = await provider.getSigner();
+    const addr = await signer.getAddress();
+    document.getElementById("walletInfo").textContent = addr.slice(0,6)+"..."+addr.slice(-4);
+  } catch(e) { alert("Error: " + e.message); }
+}
+
+async function createProject() {
+  if (!signer) { alert("Wallet connect karo!"); return; }
+  const el = document.getElementById("createStatus");
+  try {
+    el.textContent = "⏳ Transaction send ho rahi hai...";
+    const freelancer = document.getElementById("freelancerAddr").value;
+    const m1 = document.getElementById("milestone1").value;
+    const m2 = document.getElementById("milestone2").value;
+    const amounts = [ethers.parseEther(m1)];
+    if (m2) amounts.push(ethers.parseEther(m2));
+    const total = amounts.reduce((a,b) => a+b, 0n);
+    const contract = new ethers.Contract(CONTRACT, ABI, signer);
+    const tx = await contract.createProjectETH(freelancer, amounts.length, amounts, { value: total });
+    el.textContent = "⏳ Confirming... TX: " + tx.hash.slice(0,10) + "...";
+    const receipt = await tx.wait();
+    el.textContent = "✅ Project created! TX: " + receipt.hash.slice(0,10) + "...";
+  } catch(e) { el.textContent = "❌ Error: " + e.message; }
+}
+
+async function submitWork() {
+  if (!signer) { alert("Wallet connect karo!"); return; }
+  const el = document.getElementById("submitStatus");
+  try {
+    el.textContent = "⏳ Submitting...";
+    const pid = document.getElementById("submitProjectId").value;
+    const proof = document.getElementById("proofLink").value;
+    const contract = new ethers.Contract(CONTRACT, ABI, signer);
+    const tx = await contract.submitWork(pid, proof);
+    await tx.wait();
+    el.textContent = "✅ Work submitted! AI review karega...";
+  } catch(e) { el.textContent = "❌ Error: " + e.message; }
+}
+
+async function checkProject() {
+  if (!provider) { alert("Wallet connect karo!"); return; }
+  const el = document.getElementById("checkStatus");
+  try {
+    const pid = document.getElementById("checkProjectId").value;
+    const contract = new ethers.Contract(CONTRACT, ABI, provider);
+    const p = await contract.projects(pid);
+    const statuses = ["Active","Completed","Disputed","Refunded"];
+    el.innerHTML = `Client: ${p[0].slice(0,8)}...<br>Freelancer: ${p[1].slice(0,8)}...<br>Amount: ${ethers.formatEther(p[3])} ETH<br>Milestone: ${p[5]}/${p[6]}<br>Status: ${statuses[p[11]]}`;
+  } catch(e) { el.textContent = "❌ Error: " + e.message; }
+}
+</script>
+</body>
+</html>
