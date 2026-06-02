@@ -351,7 +351,7 @@ textarea.input{resize:vertical;min-height:80px}
 </div>
 
 <script>
-const CONTRACT = "0xF8E578f710F1C35ef21E5a33Ea3E6ea04eA96c14";
+const CONTRACT = "0x97c6262F66e11958778cB63e43914Ba43016C7be";
 const ABI = [
   "function createProjectETH(address _freelancer, uint256 _totalMilestones, uint256[] calldata _milestoneAmounts) external payable returns (uint256)",
   "function submitWork(uint256 _projectId, string calldata _proofLink) external",
@@ -511,8 +511,8 @@ async function createProject() {
     el.className = "status";
     const freelancer = document.getElementById("freelancerAddr").value.trim();
     const m1 = document.getElementById("milestone1").value;
-    const m2 = document.getElementById("milestone2").value;
-    const m3 = document.getElementById("milestone3").value;
+    const m2 = null;
+    const m3 = null;
     const cat = document.getElementById('projCat').value; if(!freelancer||!m1||!cat){ el.textContent="❌ Freelancer address aur milestone 1 zaroor daalo!"; el.className="status error"; return; }
     const amounts = [ethers.parseEther(m1)];
     if(m2) amounts.push(ethers.parseEther(m2));
