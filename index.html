@@ -5,3 +5,719 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Freelance AI Escrow</title>
 <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.0/dist/ethers.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d0d1a;color:#fff;font-family:'Segoe UI',sans-serif}
+:root{--p:#8b5cf6;--p2:#6d28d9;--p3:#a78bfa;--dark:#13132b;--card:#1a1a35;--border:#2d2d5e;--green:#10b981;--red:#ef4444;--yellow:#f59e0b}
+.navbar{background:#13132b;padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.logo{color:var(--p3);font-size:1.4rem;font-weight:800}
+.logo span{color:#fff}
+.nav-right{display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap}
+.wallet-info{background:#1a1a35;border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.8rem;font-size:0.8rem;color:var(--p3)}
+.balance-info{background:#1a1a35;border:1px solid var(--border);border-radius:8px;padding:0.4rem 0.8rem;font-size:0.8rem;color:#a0aec0}
+.btn{background:var(--p);color:#fff;padding:0.5rem 1.2rem;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.9rem;transition:0.2s}
+.btn:hover{background:var(--p2)}
+.btn-green{background:var(--green);color:#fff;padding:0.5rem 1.2rem;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.9rem}
+.btn-outline{background:transparent;color:var(--p3);border:1px solid var(--p);padding:0.5rem 1.2rem;border-radius:8px;cursor:pointer;font-weight:600;font-size:0.9rem}
+.btn-sm{padding:0.3rem 0.8rem;font-size:0.8rem}
+.btn-red{background:var(--red);color:#fff;padding:0.5rem 1.2rem;border:none;border-radius:8px;cursor:pointer;font-weight:600}
+.tabs{display:flex;gap:0;background:#13132b;border-bottom:1px solid var(--border);overflow-x:auto;padding:0 0.5rem}
+.tab{padding:0.9rem 1rem;cursor:pointer;color:#888;font-size:0.85rem;border-bottom:2px solid transparent;white-space:nowrap;transition:0.2s}
+.tab.active{color:var(--p3);border-bottom-color:var(--p)}
+.page{display:none;padding:1.2rem}
+.page.active{display:block}
+.hero{text-align:center;padding:2.5rem 1rem 1.5rem}
+.hero h1{font-size:2.2rem;font-weight:800;margin-bottom:0.8rem}
+.hero h1 span{color:var(--p3)}
+.hero p{color:#888;font-size:1rem;margin-bottom:1.5rem}
+.fee-badge{display:inline-block;background:#8b5cf620;color:var(--p3);border:1px solid var(--p);padding:0.3rem 1rem;border-radius:20px;font-size:0.85rem;margin-bottom:1rem}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0.8rem;margin-bottom:1.5rem}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem;text-align:center}
+.stat h3{color:var(--p3);font-size:1.3rem;font-weight:800}
+.stat p{color:#888;font-size:0.75rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem}
+.card h3{color:var(--p3);margin-bottom:1rem;font-size:1rem}
+.input{width:100%;background:#0d0d1a;border:1px solid var(--border);color:#fff;padding:0.7rem 1rem;border-radius:8px;margin-bottom:0.8rem;font-size:0.9rem;outline:none;transition:0.2s}
+.input:focus{border-color:var(--p)}
+.input::placeholder{color:#555}
+select.input{cursor:pointer;color:#fff;background:#0d0d1a} select.input option{background:#1a1a35;color:#fff}
+textarea.input{resize:vertical;min-height:80px}
+.status{background:#0d0d1a;border:1px solid var(--border);border-radius:8px;padding:0.8rem;margin-top:0.8rem;font-size:0.85rem;color:#888;min-height:50px;word-break:break-all}
+.status.success{border-color:var(--green);color:var(--green)}
+.status.error{border-color:var(--red);color:var(--red)}
+
+/* LOCKER */
+.locker{border-radius:12px;padding:1.2rem;margin-bottom:1rem;border:2px solid;text-align:center;transition:0.3s}
+.locker.locked{border-color:var(--red);background:#ef444410}
+.locker.unlocked{border-color:var(--green);background:#10b98110}
+.locker-icon{font-size:2.5rem;margin-bottom:0.5rem}
+.locker h4{font-size:1rem;font-weight:700}
+.locker p{font-size:0.8rem;color:#888;margin-top:0.3rem}
+
+.gig-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;transition:0.2s}
+.gig-card:hover{border-color:var(--p);transform:translateY(-2px)}
+.gig-title{font-size:1rem;font-weight:600;margin-bottom:0.5rem}
+.gig-desc{color:#888;font-size:0.85rem;margin-bottom:0.8rem;line-height:1.4}
+.gig-footer{display:flex;justify-content:space-between;align-items:center}
+.gig-price{color:var(--p3);font-weight:700}
+.gig-cat{background:#8b5cf620;color:var(--p3);padding:0.2rem 0.6rem;border-radius:20px;font-size:0.75rem;display:inline-block;margin-bottom:0.5rem}
+.cats{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.2rem}
+.cat-btn{background:#1a1a35;border:1px solid var(--border);color:#888;padding:0.4rem 0.8rem;border-radius:20px;cursor:pointer;font-size:0.8rem;transition:0.2s}
+.cat-btn.active,.cat-btn:hover{background:var(--p);color:#fff;border-color:var(--p)}
+.tx-item{background:#0d0d1a;border:1px solid var(--border);border-radius:8px;padding:0.8rem;margin-bottom:0.6rem;display:flex;justify-content:space-between;align-items:center}
+.tx-hash{color:var(--p3);font-size:0.8rem;font-family:monospace}
+.tx-status{font-size:0.75rem;padding:0.2rem 0.6rem;border-radius:10px}
+.tx-success{background:#10b98120;color:var(--green)}
+.section-title{font-size:1.2rem;font-weight:700;margin-bottom:1rem;color:#fff}
+.section-title span{color:var(--p3)}
+.profile-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--p2));display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 1rem}
+.skill-tag{background:#8b5cf620;color:var(--p3);padding:0.2rem 0.8rem;border-radius:20px;font-size:0.8rem;display:inline-block;margin:0.2rem}
+.job-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;margin-bottom:1rem}
+.job-card:hover{border-color:var(--p)}
+.job-title{font-size:1rem;font-weight:600;color:#fff;margin-bottom:0.5rem}
+.job-desc{color:#888;font-size:0.85rem;line-height:1.5;margin-bottom:0.8rem}
+.job-meta{display:flex;gap:0.8rem;flex-wrap:wrap;font-size:0.8rem;color:#888}
+.job-pay{color:var(--green);font-weight:600}
+.swap-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;max-width:450px;margin:0 auto}
+.swap-input-box{background:#0d0d1a;border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:0.5rem}
+.swap-label{font-size:0.8rem;color:#888;margin-bottom:0.5rem}
+.swap-amount{font-size:1.8rem;font-weight:700;background:none;border:none;color:#fff;width:100%;outline:none}
+.swap-token{background:var(--p);color:#fff;padding:0.4rem 1rem;border-radius:20px;font-weight:600;font-size:0.9rem;cursor:pointer;border:none}
+.swap-arrow{text-align:center;font-size:1.5rem;margin:0.3rem 0;cursor:pointer;color:var(--p3)}
+.fee-info{background:#8b5cf610;border:1px solid var(--border);border-radius:8px;padding:0.8rem;margin:0.8rem 0;font-size:0.85rem}
+.fee-row{display:flex;justify-content:space-between;margin-bottom:0.3rem}
+.divider{border:none;border-top:1px solid var(--border);margin:1rem 0}
+.platform-banner{background:linear-gradient(135deg,#8b5cf620,#6d28d920);border:1px solid var(--p);border-radius:12px;padding:1rem;margin-bottom:1.2rem;display:flex;justify-content:space-around;flex-wrap:wrap;gap:0.5rem}
+.banner-item{text-align:center}
+.banner-item h4{color:var(--p3);font-size:1.1rem;font-weight:800}
+.banner-item p{color:#888;font-size:0.75rem}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">⚡AI<span>Escrow</span></div>
+  <div class="nav-right">
+    <div class="balance-info" id="balanceInfo">Balance: --</div>
+    <div class="wallet-info" id="walletInfo">Not Connected</div>
+    <button class="btn btn-sm" onclick="connectWallet()">Connect</button>
+  </div>
+</nav>
+
+<div class="tabs">
+  <div class="tab active" onclick="showPage('home')">🏠 Home</div>
+  <div class="tab" onclick="showPage('jobs')">💼 Jobs</div>
+  <div class="tab" onclick="showPage('browse')">🔍 Gigs</div>
+  <div class="tab" onclick="showPage('post')">➕ Post</div>
+  <div class="tab" onclick="showPage('create')">🚀 Project</div>
+  <div class="tab" onclick="showPage('swap')">🔄 Swap</div>
+  <div class="tab" onclick="showPage('profile')">👤 Profile</div>
+  <div class="tab" onclick="showPage('history')">📋 History</div>
+</div>
+
+<!-- HOME -->
+<div id="home" class="page active">
+  <div class="hero">
+    <div class="fee-badge">Platform Fee: 10% | Swap Fee: 10%</div>
+    <h1>Web3 Freelance <span>on Chain</span></h1>
+    <p>AI-powered escrow — Hire, Work & Get Paid on Arbitrum</p>
+    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+      <button class="btn" onclick="showPage('jobs')">Find Jobs</button>
+      <button class="btn-outline" onclick="showPage('post')">Post Gig</button>
+      <button class="btn-outline" onclick="showPage('swap')">Swap ETH</button>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><h3 id="totalProjects">0</h3><p>Projects</p></div>
+    <div class="stat"><h3>10%</h3><p>Platform Fee</p></div>
+    <div class="stat"><h3>90%</h3><p>Freelancer Gets</p></div>
+    <div class="stat"><h3>AI</h3><p>Claude AI</p></div>
+  </div>
+  <div class="platform-banner">
+    <div class="banner-item"><h4>~$0.001</h4><p>Gas Fee</p></div>
+    <div class="banner-item"><h4>Arbitrum</h4><p>Network</p></div>
+    <div class="banner-item"><h4>Secure</h4><p>Audited</p></div>
+    <div class="banner-item"><h4>Free</h4><p>No Server</p></div>
+  </div>
+  <div class="section-title">Latest <span>Gigs</span></div>
+  <div class="grid" id="featuredGigs"><div style="color:#888">No gigs available yet — post karo!</div></div>
+</div>
+
+<!-- JOBS -->
+<div id="jobs" class="page">
+  <div class="section-title">Web3 <span>Jobs</span></div>
+  <div class="cats">
+    <div class="cat-btn active" onclick="filterJob('all',this)">All</div>
+    <div class="cat-btn" onclick="filterJob('Smart Contract',this)">⛓️ Smart Contract</div>
+    <div class="cat-btn" onclick="filterJob('Web Development',this)">💻 Web Dev</div>
+    <div class="cat-btn" onclick="filterJob('Binance Bot',this)">📈 Binance Bot</div>
+    <div class="cat-btn" onclick="filterJob('Spot Bot',this)">💰 Spot Bot</div>
+    <div class="cat-btn" onclick="filterJob('AI/ML',this)">🤖 AI/ML</div>
+    <div class="cat-btn" onclick="filterJob('Remote Work',this)">🏠 Remote</div>
+    <div class="cat-btn" onclick="filterJob('Mobile App',this)">📱 Mobile</div>
+  </div>
+  <div id="jobsList"></div>
+</div>
+
+<!-- BROWSE GIGS -->
+<div id="browse" class="page">
+  <div class="section-title">Browse <span>Gigs</span></div>
+  <div class="cats">
+    <div class="cat-btn active" onclick="filterCat('all',this)">All</div>
+    <div class="cat-btn" onclick="filterCat('Web Development',this)">💻 Web Dev</div>
+    <div class="cat-btn" onclick="filterCat('Smart Contract',this)">⛓️ Smart Contract</div>
+    <div class="cat-btn" onclick="filterCat('Binance Bot',this)">📈 Binance Bot</div>
+    <div class="cat-btn" onclick="filterCat('Spot Bot',this)">💰 Spot Bot</div>
+    <div class="cat-btn" onclick="filterCat('AI/ML',this)">🤖 AI/ML</div>
+    <div class="cat-btn" onclick="filterCat('Remote Work',this)">🏠 Remote</div>
+    <div class="cat-btn" onclick="filterCat('Mobile App',this)">📱 Mobile</div>
+  </div>
+  <div class="grid" id="browseGigs"></div>
+</div>
+
+<!-- POST GIG -->
+<div id="post" class="page">
+  <div class="section-title">Post a <span>Gig</span></div>
+  <div style="max-width:600px">
+    <div class="card">
+      <h3>📝 Gig Details</h3>
+      <input class="input" id="gigTitle" placeholder="Gig Title (e.g. I will build Binance trading bot)">
+      <textarea class="input" id="gigDesc" placeholder="Describe your service in detail — what you offer, delivery, revisions..."></textarea>
+      <select class="input" id="gigCat">
+        <option value="">-- Select Category --</option>
+        <option>Web Development</option>
+        <option>Smart Contract</option>
+        <option>Binance Bot</option>
+        <option>Spot Bot</option>
+        <option>AI/ML</option>
+        <option>Remote Work</option>
+        <option>Mobile App</option>
+      </select>
+      <input class="input" id="gigPrice" placeholder="Starting Price (ETH) e.g. 0.01" type="number" step="0.001">
+      <input class="input" id="gigDelivery" placeholder="Delivery Time (e.g. 3 days)">
+      <input class="input" id="gigContact" placeholder="Telegram/Discord (e.g. @username)">
+      <button class="btn" style="width:100%" onclick="postGig()">Post Gig</button>
+      <div class="status" id="postStatus">Connect your wallet to continue...</div>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE PROJECT -->
+<div id="create" class="page">
+  <div class="section-title">Create <span>Project</span></div>
+
+  <!-- LOCKER -->
+  <div class="locker locked" id="lockerBox">
+    <div class="locker-icon" id="lockerIcon">🔴</div>
+    <h4 id="lockerTitle">ETH Lock Required</h4>
+    <p id="lockerDesc">Lock ETH to submit your project</p>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>🔒 Step 1 — Lock ETH</h3>
+      <div class="fee-info">
+        <div class="fee-row"><span>Platform Fee</span><span style="color:var(--red)">10%</span></div>
+        <div class="fee-row"><span>Freelancer Gets</span><span style="color:var(--green)">90%</span></div>
+      </div>
+      <input class="input" id="projTitle" placeholder="Project Title">
+      <textarea class="input" id="projDesc" placeholder="Project Description..."></textarea>
+      <select class="input" id="projCat" onchange="this.style.color='#fff'">
+        <option value="">-- Select Category --</option>
+        <option>Web Development</option>
+        <option>Smart Contract</option>
+        <option>Binance Bot</option>
+        <option>Spot Bot</option>
+        <option>AI/ML</option>
+        <option>Remote Work</option>
+        <option>Mobile App</option>
+      </select>
+      <input class="input" id="freelancerAddr" placeholder="Freelancer Wallet Address (0x...)">
+      <input class="input" id="milestone1" placeholder="Milestone 1 Amount (ETH)" type="number" step="0.001">
+      
+      
+      <button class="btn-green" style="width:100%;padding:0.7rem;border-radius:8px;font-weight:700;font-size:1rem" onclick="createProject()">🔒 Lock ETH & Create Project</button>
+      <div class="status" id="createStatus">Lock ETH to enable project submission</div>
+    </div>
+    <div class="card">
+      <h3>🔍 Check Project</h3>
+      <input class="input" id="checkProjectId" placeholder="Project ID">
+      <button class="btn" style="width:100%" onclick="checkProject()">Get Details</button>
+      <div class="status" id="checkStatus">Enter Project ID...</div>
+    </div>
+  </div>
+
+  <!-- SUBMIT WORK -->
+  <div class="divider"></div>
+  <div class="section-title">📤 Submit <span>Work</span></div>
+  <div style="max-width:500px">
+    <div class="card">
+      <h3>Milestone Submission</h3>
+      <input class="input" id="submitProjectId" placeholder="Project ID">
+      <input class="input" id="proofLink" placeholder="Work Proof Link (GitHub/Drive/Notion)">
+      <textarea class="input" id="workDesc" placeholder="Describe what you completed..."></textarea>
+      <div class="fee-info" style="margin-bottom:0.8rem"><div class="fee-row"><span>Submit Work</span><span style="color:var(--green)">FREE</span></div><div class="fee-row"><span>AI Review Fee</span><span style="color:var(--red)">0.0001 ETH</span></div></div><button class="btn" style="width:100%" id="submitBtn" onclick="submitWork()">🔒 Lock ETH First</button>
+      <div class="status" id="submitStatus">Submit work after locking ETH</div>
+    </div>
+  </div>
+</div>
+
+<!-- SWAP -->
+<div id="swap" class="page">
+  <div class="section-title">🔄 ETH <span>Swap</span></div>
+  <div class="swap-box">
+    <div class="swap-input-box">
+      <div class="swap-label">You Send</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <input class="swap-amount" id="swapFrom" type="number" placeholder="0.0" oninput="calcSwap()" step="0.001">
+        <button class="swap-token">ETH</button>
+      </div>
+      <div style="font-size:0.8rem;color:#888;margin-top:0.5rem" id="swapFromBal">Balance: --</div>
+    </div>
+    <div class="swap-arrow">⇅</div>
+    <div class="swap-input-box">
+      <div class="swap-label">You Receive (estimated)</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <input class="swap-amount" id="swapTo" placeholder="0.0" readonly style="color:var(--p3)">
+        <select id="swapToken" class="swap-token" style="cursor:pointer" onchange="calcSwap()">
+          <option value="USDT">USDT</option>
+          <option value="USDC">USDC</option>
+        </select>
+      </div>
+    </div>
+    <div class="fee-info">
+      <div class="fee-row"><span>Swap Fee (10%)</span><span id="swapFee" style="color:var(--red)">0.000 ETH</span></div>
+      <div class="fee-row"><span>Platform Fee (10%)</span><span id="platformFee" style="color:var(--red)">0.000 ETH</span></div>
+      <div class="fee-row"><span>You Get</span><span id="swapGet" style="color:var(--green)">0.000 ETH worth</span></div>
+      <div class="fee-row"><span>Rate</span><span id="ethRate" style="color:var(--p3)">Loading...</span></div>
+    </div>
+    <button class="btn" style="width:100%;padding:0.8rem;font-size:1rem" onclick="doSwap()">Swap ETH → <span id="swapTokenLabel">USDT</span></button>
+    <div class="status" id="swapStatus">Connect your wallet to continue...</div>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div id="profile" class="page">
+  <div class="section-title">👤 My <span>Profile</span></div>
+  <div class="grid">
+    <div class="card" id="profileView">
+      <div class="profile-avatar" id="profileAvatar">👤</div>
+      <div style="text-align:center;margin-bottom:1rem">
+        <h3 id="profileName" style="color:#fff;font-size:1.2rem">--</h3>
+        <div style="color:#888;font-size:0.85rem" id="profileWallet">Not connected</div>
+        <div style="margin-top:0.5rem" id="profileSkillsView"></div>
+      </div>
+      <div class="fee-info">
+        <div class="fee-row"><span>Title</span><span id="profileTitle" style="color:var(--p3)">--</span></div>
+        <div class="fee-row"><span>Rate</span><span id="profileRate" style="color:var(--green)">--</span></div>
+        <div class="fee-row"><span>Contact</span><span id="profileContact" style="color:var(--p3)">--</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>✏️ Edit Profile</h3>
+      <input class="input" id="pName" placeholder="Your Name">
+      <input class="input" id="pTitle" placeholder="Title (e.g. Solidity Developer)">
+      <textarea class="input" id="pBio" placeholder="Bio — Write about yourself..."></textarea>
+      <input class="input" id="pSkills" placeholder="Skills (comma separated: Solidity, React, Python)">
+      <input class="input" id="pRate" placeholder="Hourly Rate (e.g. 0.01 ETH/hr)">
+      <input class="input" id="pContact" placeholder="Telegram/Discord (@username)">
+      <select class="input" id="pCategory">
+        <option value="">Main Category</option>
+        <option>Web Development</option>
+        <option>Smart Contract</option>
+        <option>Binance Bot</option>
+        <option>Spot Bot</option>
+        <option>AI/ML</option>
+        <option>Remote Work</option>
+        <option>Mobile App</option>
+      </select>
+      <button class="btn" style="width:100%" onclick="saveProfile()">Save Profile</button>
+      <div class="status" id="profileStatus">Connect your wallet to continue...</div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div id="history" class="page">
+  <div class="section-title">📋 Transaction <span>History</span></div>
+  <div style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap">
+    <button class="btn btn-sm" onclick="loadHistory()">🔄 Refresh</button>
+    <a id="arbscanLink" href="#" target="_blank" class="btn-outline btn-sm" style="text-decoration:none;display:inline-block;padding:0.3rem 0.8rem">View on Arbiscan ↗</a>
+    <button class="btn-sm" style="background:var(--red);color:#fff;border:none;border-radius:8px;cursor:pointer" onclick="clearHistory()">🗑 Clear</button>
+  </div>
+  <div id="txHistory"><div class="status">Connect wallet to view transaction history</div></div>
+</div>
+
+<script>
+const CONTRACT = "0xF8E578f710F1C35ef21E5a33Ea3E6ea04eA96c14";
+const ABI = [
+  "function createProjectETH(address _freelancer, uint256 _totalMilestones, uint256[] calldata _milestoneAmounts) external payable returns (uint256)",
+  "function submitWork(uint256 _projectId, string calldata _proofLink) external",
+  "function projects(uint256) external view returns (address,address,address,uint256,uint256,uint256,uint256,bool,bool,uint256,uint256,uint8)",
+  "function projectCount() external view returns (uint256)"
+];
+
+let provider, signer, userAddress;
+let ethLocked = false;
+let ethPrice = 3500;
+
+let gigs = JSON.parse(localStorage.getItem("aiescrow_gigs") || "[]");
+let txHistory = JSON.parse(localStorage.getItem("aiescrow_tx") || "[]");
+let userProfile = JSON.parse(localStorage.getItem("aiescrow_profile") || "{}");
+
+const WEB3_JOBS = [
+  {title:"Solidity Smart Contract Developer",desc:"Build and deploy ERC20/ERC721 contracts on Ethereum. Experience with OpenZeppelin required. Remote friendly position with flexible hours.",cat:"Smart Contract",pay:"0.05-0.2 ETH/project",type:"Contract",location:"Remote"},
+  {title:"Binance Futures Trading Bot Developer",desc:"Develop automated futures trading bot using Binance API. Knowledge of RSI, MACD, Bollinger Bands strategies required.",cat:"Binance Bot",pay:"0.1-0.5 ETH/project",type:"Contract",location:"Remote"},
+  {title:"Spot Trading Bot — Python/Node.js",desc:"Build spot trading bot with stop loss, take profit automation. Multi-pair support needed. API integration with major exchanges.",cat:"Spot Bot",pay:"0.08-0.3 ETH/project",type:"Freelance",location:"Remote"},
+  {title:"Web3 Frontend Developer — React/Next.js",desc:"Build dApp frontend with wallet integration, ethers.js, Web3Modal. Experience with DeFi protocols preferred.",cat:"Web Development",pay:"0.03-0.15 ETH/project",type:"Part-time",location:"Remote"},
+  {title:"DeFi Protocol Developer",desc:"Work on AMM, lending protocols, yield farming contracts. Audit experience is a plus. Long-term engagement possible.",cat:"Smart Contract",pay:"0.2-1 ETH/project",type:"Full-time",location:"Remote"},
+  {title:"AI Trading Strategy Developer",desc:"Develop ML-based trading strategies for crypto markets. Python, TensorFlow/PyTorch, backtesting experience needed.",cat:"AI/ML",pay:"0.1-0.4 ETH/project",type:"Contract",location:"Remote"},
+  {title:"Mobile dApp Developer — React Native",desc:"Build cross-platform crypto wallet and DeFi app. Web3 mobile integration, WalletConnect experience required.",cat:"Mobile App",pay:"0.1-0.3 ETH/project",type:"Contract",location:"Remote"},
+  {title:"Remote Blockchain Researcher",desc:"Research DeFi protocols, write technical reports, analyze on-chain data. Good communication skills required.",cat:"Remote Work",pay:"0.02-0.08 ETH/hr",type:"Part-time",location:"Remote"},
+  {title:"NFT Smart Contract + Marketplace",desc:"Deploy NFT collection with royalties, build marketplace UI. ERC721A optimization experience needed.",cat:"Smart Contract",pay:"0.05-0.25 ETH/project",type:"Freelance",location:"Remote"},
+  {title:"Crypto Content Writer — Technical",desc:"Write technical articles on DeFi, blockchain, trading bots. Web3 knowledge mandatory.",cat:"Remote Work",pay:"0.01-0.05 ETH/article",type:"Freelance",location:"Remote"},
+  {title:"Arbitrage Bot Developer",desc:"Build cross-exchange arbitrage bot. Low latency execution, multi-DEX support. Uniswap/SushiSwap experience preferred.",cat:"Spot Bot",pay:"0.15-0.6 ETH/project",type:"Contract",location:"Remote"},
+  {title:"Web3 Backend — Node.js/Go",desc:"Build APIs for blockchain data indexing, event listening, webhook systems. PostgreSQL + Redis knowledge needed.",cat:"Web Development",pay:"0.05-0.2 ETH/project",type:"Full-time",location:"Remote"},
+];
+
+function showPage(id) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  const tabs = ["home","jobs","browse","post","create","swap","profile","history"];
+  const idx = tabs.indexOf(id);
+  if(idx >= 0) document.querySelectorAll(".tab")[idx].classList.add("active");
+  if(id==="browse"||id==="home") renderGigs();
+  if(id==="jobs") renderJobs();
+  if(id==="history") loadHistory();
+  if(id==="profile") loadProfile();
+  if(id==="swap") fetchEthPrice();
+}
+
+async function connectWallet() {
+  if (!window.ethereum) { alert("Please install MetaMask or any Web3 wallet to continue!"); return; }
+  try {
+    provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send("eth_requestAccounts", []);
+    await window.ethereum.request({
+      method: "wallet_addEthereumChain",
+      params: [{ chainId: "0x66eee", chainName: "Arbitrum Sepolia",
+        rpcUrls: ["https://sepolia-rollup.arbitrum.io/rpc"],
+        nativeCurrency: { name:"ETH", symbol:"ETH", decimals:18 },
+        blockExplorerUrls: ["https://sepolia.arbiscan.io"] }]
+    });
+    signer = await provider.getSigner();
+    userAddress = await signer.getAddress();
+    document.getElementById("walletInfo").textContent = userAddress.slice(0,6)+"..."+userAddress.slice(-4);
+    document.getElementById("arbscanLink").href = "https://sepolia.arbiscan.io/address/"+userAddress;
+    await updateBalance();
+    await loadProjectCount();
+    setInterval(updateBalance, 15000);
+  } catch(e) { alert("Error: "+e.message); }
+}
+
+async function updateBalance() {
+  if(!provider||!userAddress) return;
+  try {
+    const bal = await provider.getBalance(userAddress);
+    const formatted = parseFloat(ethers.formatEther(bal)).toFixed(4);
+    document.getElementById("balanceInfo").textContent = formatted+" ETH";
+    document.getElementById("swapFromBal").textContent = "Balance: "+formatted+" ETH";
+  } catch(e){}
+}
+
+async function loadProjectCount() {
+  try {
+    const c = new ethers.Contract(CONTRACT, ABI, provider);
+    const count = await c.projectCount();
+    document.getElementById("totalProjects").textContent = count.toString();
+  } catch(e){}
+}
+
+async function fetchEthPrice() {
+  try {
+    const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd");
+    const d = await r.json();
+    ethPrice = d.ethereum.usd;
+    document.getElementById("ethRate").textContent = "1 ETH = $"+ethPrice.toLocaleString();
+  } catch(e){ document.getElementById("ethRate").textContent = "1 ETH ≈ $3500"; }
+}
+
+function calcSwap() {
+  const amt = parseFloat(document.getElementById("swapFrom").value) || 0;
+  const swapFee = amt * 0.10;
+  const platformFee = amt * 0.10;
+  const youGet = amt - swapFee - platformFee;
+  const usdVal = (youGet * ethPrice).toFixed(2);
+  document.getElementById("swapFee").textContent = swapFee.toFixed(6)+" ETH";
+  document.getElementById("platformFee").textContent = platformFee.toFixed(6)+" ETH";
+  document.getElementById("swapGet").textContent = youGet.toFixed(6)+" ETH ($"+usdVal+")";
+  document.getElementById("swapTo").value = usdVal;
+  document.getElementById("swapTokenLabel").textContent = document.getElementById("swapToken").value;
+}
+
+async function doSwap() {
+  if(!signer){ alert("Please connect your wallet first!"); return; }
+  const el = document.getElementById("swapStatus");
+  const amt = document.getElementById("swapFrom").value;
+  const token = document.getElementById("swapToken").value;
+  if(!amt || parseFloat(amt) <= 0){ el.textContent="❌ Amount daalo!"; el.className="status error"; return; }
+  try {
+    el.textContent = "⏳ Swap Processing...";
+    el.className = "status";
+    const amtWei = ethers.parseEther(amt);
+    const tx = await signer.sendTransaction({ to: CONTRACT, value: amtWei });
+    await tx.wait();
+    const txData = { hash: tx.hash, type: "Swap ETH→"+token, amount: amt+" ETH", time: new Date().toLocaleString(), status:"success" };
+    txHistory.unshift(txData);
+    localStorage.setItem("aiescrow_tx", JSON.stringify(txHistory.slice(0,50)));
+    el.textContent = "✅ Swap done! TX: "+tx.hash.slice(0,12)+"...";
+    el.className = "status success";
+    await updateBalance();
+  } catch(e){ el.textContent="❌ Error: "+e.message; el.className="status error"; }
+}
+
+function updateLocker(locked) {
+  ethLocked = locked;
+  const box = document.getElementById("lockerBox");
+  const icon = document.getElementById("lockerIcon");
+  const title = document.getElementById("lockerTitle");
+  const desc = document.getElementById("lockerDesc");
+  const btn = document.getElementById("submitBtn");
+  if(locked){
+    box.className = "locker unlocked";
+    icon.textContent = "🟢";
+    title.textContent = "ETH Locked ✅";
+    desc.textContent = "ETH lock ho gaya — ab project submit kar sakte ho!";
+    btn.disabled = false;
+    btn.textContent = "📤 Submit Work";
+  } else {
+    box.className = "locker locked";
+    icon.textContent = "🔴";
+    title.textContent = "ETH Lock Required";
+    desc.textContent = "Lock ETH to submit your project";
+    btn.disabled = true;
+    btn.textContent = "🔒 Lock ETH First";
+  }
+}
+
+async function createProject() {
+  if(!signer){ alert("Please connect your wallet first!"); return; }
+  const el = document.getElementById("createStatus");
+  try {
+    el.textContent = "⏳ ETH lock ho rahi hai...";
+    el.className = "status";
+    const freelancer = document.getElementById("freelancerAddr").value.trim();
+    const m1 = document.getElementById("milestone1").value;
+    const m2 = document.getElementById("milestone2").value;
+    const m3 = document.getElementById("milestone3").value;
+    const cat = document.getElementById('projCat').value; if(!freelancer||!m1||!cat){ el.textContent="❌ Freelancer address aur milestone 1 zaroor daalo!"; el.className="status error"; return; }
+    const amounts = [ethers.parseEther(m1)];
+    if(m2) amounts.push(ethers.parseEther(m2));
+    if(m3) amounts.push(ethers.parseEther(m3));
+    const total = amounts.reduce((a,b)=>a+b,0n);
+    const fee = total*10n/100n;
+    const freeGets = total-fee;
+    const c = new ethers.Contract(CONTRACT, ABI, signer);
+    const tx = await c.createProjectETH(freelancer, amounts.length, amounts, {value:total});
+    el.textContent = "⏳ Confirming transaction...";
+    const receipt = await tx.wait();
+    updateLocker(true);
+    const txData = { hash:receipt.hash, type:"Project Created", amount:ethers.formatEther(total)+" ETH", fee:ethers.formatEther(fee)+" ETH", time:new Date().toLocaleString(), status:"success" };
+    txHistory.unshift(txData);
+    localStorage.setItem("aiescrow_tx", JSON.stringify(txHistory.slice(0,50)));
+    el.innerHTML = `✅ ETH Locked & Project Created!<br>TX: <a href="https://sepolia.arbiscan.io/tx/${receipt.hash}" target="_blank" style="color:var(--p3)">${receipt.hash.slice(0,14)}...</a><br>Total: ${ethers.formatEther(total)} ETH | Fee: ${ethers.formatEther(fee)} ETH | Freelancer: ${ethers.formatEther(freeGets)} ETH`;
+    el.className = "status success";
+    await updateBalance();
+    await loadProjectCount();
+  } catch(e){ el.textContent="❌ Error: "+e.message; el.className="status error"; }
+}
+
+async function submitWork() {
+  if(!signer){ alert("Please connect your wallet first!"); return; }
+  
+  const el = document.getElementById("submitStatus");
+  try {
+    el.textContent = "⏳ Submitting work...";
+    el.className = "status";
+    const pid = document.getElementById("submitProjectId").value;
+    const proof = document.getElementById("proofLink").value;
+    if(!pid||!proof){ el.textContent="❌ Enter Project ID and proof link!"; el.className="status error"; return; }
+    const c = new ethers.Contract(CONTRACT, ABI, signer);
+    const tx = await c.submitWork(pid, proof);
+    await tx.wait();
+    const txData = { hash:tx.hash, type:"Work Submitted", amount:"Project #"+pid, time:new Date().toLocaleString(), status:"success" };
+    txHistory.unshift(txData);
+    localStorage.setItem("aiescrow_tx", JSON.stringify(txHistory.slice(0,50)));
+    el.textContent = "✅ Work submitted! AI review karega aur payment release hogi.";
+    el.className = "status success";
+  } catch(e){ el.textContent="❌ Error: "+e.message; el.className="status error"; }
+}
+
+async function checkProject() {
+  if(!provider){ alert("Please connect your wallet first!"); return; }
+  const el = document.getElementById("checkStatus");
+  try {
+    const pid = document.getElementById("checkProjectId").value;
+    if(!pid){ el.textContent="❌ Enter Project ID!"; el.className="status error"; return; }
+    const c = new ethers.Contract(CONTRACT, ABI, provider);
+    const p = await c.projects(pid);
+    const statuses = ["🟢 Active","✅ Completed","⚠️ Disputed","🔴 Refunded"];
+    const total = ethers.formatEther(p[3]);
+    const fee = (parseFloat(total)*0.1).toFixed(6);
+    const freeGets = (parseFloat(total)*0.9).toFixed(6);
+    el.innerHTML = `<b>Project #${pid}</b><br>Client: ${p[0].slice(0,8)}...<br>Freelancer: ${p[1].slice(0,8)}...<br>Total: ${total} ETH<br>Fee(10%): ${fee} ETH<br>Freelancer gets: ${freeGets} ETH<br>Milestone: ${p[5]}/${p[6]}<br>Status: ${statuses[p[11]]}`;
+    el.className = "status success";
+  } catch(e){ el.textContent="❌ Error: "+e.message; el.className="status error"; }
+}
+
+function postGig() {
+  if(!userAddress){ alert("Please connect your wallet first!"); return; }
+  const title = document.getElementById("gigTitle").value.trim();
+  const desc = document.getElementById("gigDesc").value.trim();
+  const cat = document.getElementById("gigCat").value;
+  const price = document.getElementById("gigPrice").value;
+  const delivery = document.getElementById("gigDelivery").value.trim();
+  const contact = document.getElementById("gigContact").value.trim();
+  const el = document.getElementById("postStatus");
+  if(!title||!desc||!cat||!price){ el.textContent="❌ Please fill all required fields!"; el.className="status error"; return; }
+  const gig = { id:Date.now(), title, desc, cat, price, delivery, contact, seller:userAddress, sellerShort:userAddress.slice(0,6)+"..."+userAddress.slice(-4), createdAt:new Date().toLocaleDateString() };
+  gigs.unshift(gig);
+  localStorage.setItem("aiescrow_gigs", JSON.stringify(gigs));
+  el.textContent = "✅ Gig posted!";
+  el.className = "status success";
+  document.getElementById("gigTitle").value="";
+  document.getElementById("gigDesc").value="";
+  document.getElementById("gigPrice").value="";
+  renderGigs();
+}
+
+function renderGigs(cat="all") {
+  const filtered = cat==="all" ? gigs : gigs.filter(g=>g.cat===cat);
+  const html = filtered.length ? filtered.map(g=>`
+    <div class="gig-card">
+      <div class="gig-cat">${g.cat}</div>
+      <div class="gig-title">${g.title}</div>
+      <div class="gig-desc">${g.desc.slice(0,100)}${g.desc.length>100?"...":""}</div>
+      <div class="gig-footer">
+        <div class="gig-price">From ${g.price} ETH</div>
+        <div style="font-size:0.75rem;color:#888">${g.sellerShort}</div>
+      </div>
+      ${g.delivery?`<div style="font-size:0.75rem;color:#888;margin-top:0.4rem">⏱ ${g.delivery}</div>`:""}
+      ${g.contact?`<div style="font-size:0.75rem;color:var(--p3);margin-top:0.2rem">📩 ${g.contact}</div>`:""}
+    </div>
+  `).join("") : `<div style="color:#888;grid-column:1/-1;padding:1rem">No gigs yet — be the first to post!</div>`;
+  const browse = document.getElementById("browseGigs");
+  const featured = document.getElementById("featuredGigs");
+  if(browse) browse.innerHTML = html;
+  if(featured) featured.innerHTML = filtered.slice(0,3).map(g=>`
+    <div class="gig-card">
+      <div class="gig-cat">${g.cat}</div>
+      <div class="gig-title">${g.title}</div>
+      <div class="gig-desc">${g.desc.slice(0,80)}...</div>
+      <div class="gig-footer"><div class="gig-price">From ${g.price} ETH</div></div>
+    </div>
+  `).join("") || `<div style="color:#888">No gigs available yet</div>`;
+}
+
+function renderJobs(cat="all") {
+  const filtered = cat==="all" ? WEB3_JOBS : WEB3_JOBS.filter(j=>j.cat===cat);
+  document.getElementById("jobsList").innerHTML = filtered.map(j=>`
+    <div class="job-card">
+      <div class="gig-cat">${j.cat}</div>
+      <div class="job-title">${j.title}</div>
+      <div class="job-desc">${j.desc}</div>
+      <div class="job-meta">
+        <span class="job-pay">💰 ${j.pay}</span>
+        <span>📍 ${j.location}</span>
+        <span>⏱ ${j.type}</span>
+        <button class="btn btn-sm" onclick="showPage('create')" style="margin-left:auto">Apply via Escrow</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function filterCat(cat, el) {
+  document.querySelectorAll("#browse .cat-btn").forEach(b=>b.classList.remove("active"));
+  el.classList.add("active");
+  renderGigs(cat);
+}
+
+function filterJob(cat, el) {
+  document.querySelectorAll("#jobs .cat-btn").forEach(b=>b.classList.remove("active"));
+  el.classList.add("active");
+  renderJobs(cat);
+}
+
+function saveProfile() {
+  if(!userAddress){ alert("Please connect your wallet first!"); return; }
+  const profile = {
+    name: document.getElementById("pName").value,
+    title: document.getElementById("pTitle").value,
+    bio: document.getElementById("pBio").value,
+    skills: document.getElementById("pSkills").value,
+    rate: document.getElementById("pRate").value,
+    contact: document.getElementById("pContact").value,
+    category: document.getElementById("pCategory").value,
+    wallet: userAddress
+  };
+  localStorage.setItem("aiescrow_profile", JSON.stringify(profile));
+  userProfile = profile;
+  loadProfile();
+  document.getElementById("profileStatus").textContent = "✅ Profile saved!";
+  document.getElementById("profileStatus").className = "status success";
+}
+
+function loadProfile() {
+  const p = JSON.parse(localStorage.getItem("aiescrow_profile")||"{}");
+  if(!p.name) return;
+  document.getElementById("profileName").textContent = p.name || "--";
+  document.getElementById("profileTitle").textContent = p.title || "--";
+  document.getElementById("profileRate").textContent = p.rate || "--";
+  document.getElementById("profileContact").textContent = p.contact || "--";
+  document.getElementById("profileWallet").textContent = userAddress ? userAddress.slice(0,8)+"..."+userAddress.slice(-6) : "--";
+  document.getElementById("profileAvatar").textContent = p.name ? p.name[0].toUpperCase() : "👤";
+  if(p.skills){
+    document.getElementById("profileSkillsView").innerHTML = p.skills.split(",").map(s=>`<span class="skill-tag">${s.trim()}</span>`).join("");
+  }
+  if(p.name) document.getElementById("pName").value = p.name;
+  if(p.title) document.getElementById("pTitle").value = p.title;
+  if(p.bio) document.getElementById("pBio").value = p.bio;
+  if(p.skills) document.getElementById("pSkills").value = p.skills;
+  if(p.rate) document.getElementById("pRate").value = p.rate;
+  if(p.contact) document.getElementById("pContact").value = p.contact;
+}
+
+function loadHistory() {
+  const el = document.getElementById("txHistory");
+  if(!userAddress){ el.innerHTML='<div class="status">Connect wallet...</div>'; return; }
+  if(!txHistory.length){ el.innerHTML='<div class="status">No transactions yet.</div>'; return; }
+  el.innerHTML = txHistory.map(tx=>`
+    <div class="tx-item">
+      <div>
+        <div style="font-size:0.85rem;font-weight:600">${tx.type}</div>
+        <div class="tx-hash"><a href="https://sepolia.arbiscan.io/tx/${tx.hash}" target="_blank" style="color:var(--p3)">${tx.hash.slice(0,16)}...</a></div>
+        <div style="font-size:0.75rem;color:#888">${tx.time}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:0.85rem;color:var(--p3)">${tx.amount}</div>
+        <span class="tx-status tx-success">${tx.status}</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+function clearHistory() {
+  txHistory = [];
+  localStorage.setItem("aiescrow_tx","[]");
+  loadHistory();
+}
+
+renderGigs();
+renderJobs();
+loadProfile();
+</script>
+</body>
+</html>
